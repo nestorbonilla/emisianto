@@ -19,7 +19,7 @@ interface BlindedMessage {
   message: Uint8Array
 }
 
-export class WebBlsBlindingClient implements BlsBlindingClient {
+export default class WebBlsBlindingClient implements BlsBlindingClient {
   private odisPubKey: Uint8Array
   private blindedValue: BlindedMessage | undefined
   private rawMessage: Buffer | undefined

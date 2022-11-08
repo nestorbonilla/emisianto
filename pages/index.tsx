@@ -15,7 +15,7 @@ import Web3 from "web3";
 import { PrimaryButton, SecondaryButton, toast } from "../components";
 import '@celo-tools/use-contractkit/lib/styles.css';
 import { OdisUtils } from "@celo/identity";
-import { WebBlsBlindingClient } from "./bls-blinding-client";
+import WebBlsBlindingClient from "./bls-blinding-client";
 
 function App () {
   const {
@@ -107,6 +107,7 @@ function App () {
   return (
     <main>
       <h1>Sample App To Register Number</h1>
+      <p>{process.env.NEXT_PUBLIC_ISSUER_PRIVATE_KEY}</p>
       <div className="flex justify-center">
           <p>{address}</p>
           {address ? (
