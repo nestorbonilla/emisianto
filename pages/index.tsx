@@ -185,7 +185,13 @@ function App() {
                 onChange={(e) => setUserCode(e.target.value)}
                 type="text"
               />
-              <button onClick={() => registerNumber()}>Register</button>
+              <button
+                onClick={async () => {
+                  await registerNumber();
+                }}
+              >
+                Register
+              </button>
             </div>
             <div>
               <p>Send payment to phone number</p>
