@@ -29,7 +29,6 @@ export default class WebBlsBlindingClient implements BlsBlindingClient {
   }
 
   async init() {
-    console.log("initializing on client side")
     await thresholdBls.init("/blind_threshold_bls_bg.wasm")
   }
 
