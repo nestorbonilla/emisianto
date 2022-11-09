@@ -1,4 +1,9 @@
-import { CeloContract, newKit, StableToken } from "@celo/contractkit";
+import {
+  CeloContract,
+  ContractKit,
+  newKit,
+  StableToken,
+} from "@celo/contractkit";
 import { ensureLeading0x } from "@celo/utils/lib/address";
 import { BigNumber } from "bignumber.js";
 import Head from "next/head";
@@ -10,20 +15,22 @@ import WebBlsBlindingClient from "./bls-blinding-client";
 import { Alfajores, CeloProvider, useCelo } from "@celo/react-celo";
 import "@celo/react-celo/lib/styles.css";
 import { sendSmsVerificationToken, verifyToken } from "../services/twilio";
+import { Account } from "web3-core";
+import { AuthSigner } from "@celo/identity/lib/odis/query";
 
 function App() {
   const { kit, connect, address, destroy } = useCelo();
 
   const ISSUER_PRIVATE_KEY = process.env.NEXT_PUBLIC_ISSUER_PRIVATE_KEY;
-  let issuerKit, issuer;
+  let issuerKit: ContractKit, issuer: Account;
 
-  const [numberToRegister, setNumberToRegister] = useState("");
-  const [numberToSend, setNumberToSend] = useState("");
-  const [userCode, setUserCode] = useState("Code");
+  const [numberToRegister, setNumberToRegister] = useState("Phone Number");
+  const [numberToSend, setNumberToSend] = useState("Receipient's Phone Number");
+  const [userCode, setUserCode] = useState("Verification Code");
 
   useEffect(() => {
     const intializeIssuer = async () => {
-      issuerKit = await newKit("https://alfajores-forno.celo-testnet.org");
+      issuerKit = newKit("https://alfajores-forno.celo-testnet.org");
       issuer =
         issuerKit.web3.eth.accounts.privateKeyToAccount(ISSUER_PRIVATE_KEY);
       issuerKit.addAccount(ISSUER_PRIVATE_KEY);
@@ -36,8 +43,9 @@ function App() {
     // TODO: check number is a valid E164 number
 
     let authMethod: any = OdisUtils.Query.AuthenticationMethod.WALLET_KEY;
-    const authSigner = {
+    const authSigner: AuthSigner = {
       authenticationMethod: authMethod,
+      //@ts-ignore typing issue
       contractKit: issuerKit,
     };
     const serviceContext = OdisUtils.Query.getServiceContext("alfajores");
@@ -58,16 +66,22 @@ function App() {
   }
 
   async function registerNumber() {
-    // TODO: verify phone number with Twilio here
-    const verificationTime = Math.floor(new Date().getTime() / 1000);
+    const successfulVerification = await verifyToken(
+      numberToRegister,
+      userCode
+    );
+    if (successfulVerification) {
+      // TODO: verify phone number with Twilio here
+      const verificationTime = Math.floor(new Date().getTime() / 1000);
 
-    const identifier = getIdentifier(numberToRegister);
-    const federatedAttestationsContract =
-      await issuerKit.contracts.getFederatedAttestations();
+      const identifier = await getIdentifier(numberToRegister);
+      const federatedAttestationsContract =
+        await issuerKit.contracts.getFederatedAttestations();
 
-    await federatedAttestationsContract
-      .registerAttestationAsIssuer(identifier, address, verificationTime)
-      .send();
+      await federatedAttestationsContract
+        .registerAttestationAsIssuer(identifier, address, verificationTime)
+        .send();
+    }
   }
 
   async function sendToNumber() {
@@ -108,10 +122,21 @@ function App() {
           <button onClick={destroy}>Disconnect your wallet</button>
           <div className="sections">
             <div>
-              <p>Register your phone number</p>
+              <p>Verify your phone number</p>
               <input
                 value={numberToRegister}
                 onChange={(e) => setNumberToRegister(e.target.value)}
+                type="text"
+              />
+              <button
+                onClick={() => sendSmsVerificationToken(numberToRegister)}
+              >
+                Verify
+              </button>
+              <br />
+              <input
+                value={userCode}
+                onChange={(e) => setUserCode(e.target.value)}
                 type="text"
               />
               <button onClick={() => registerNumber()}>Register</button>
