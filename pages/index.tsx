@@ -67,7 +67,6 @@ function App() {
         serviceContext,
         undefined,
         undefined,
-        undefined,
         blindingClient
       );
   
