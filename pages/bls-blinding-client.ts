@@ -26,10 +26,10 @@ export default class WebBlsBlindingClient implements BlsBlindingClient {
 
   constructor(odisPubKey: string) {
     this.odisPubKey = Buffer.from(odisPubKey, 'base64')
-    this.init()
   }
 
   async init() {
+    console.log("initializing on client side")
     await thresholdBls.init("/blind_threshold_bls_bg.wasm")
   }
 
