@@ -26,7 +26,6 @@ export default class WebBlsBlindingClient implements BlsBlindingClient {
 
   constructor(odisPubKey: string) {
     this.odisPubKey = Buffer.from(odisPubKey, 'base64')
-    this.init()
   }
 
   async init() {

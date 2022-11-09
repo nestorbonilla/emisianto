@@ -17,12 +17,13 @@ import "@celo/react-celo/lib/styles.css";
 import { sendSmsVerificationToken, verifyToken } from "../services/twilio";
 import { Account } from "web3-core";
 import { AuthSigner } from "@celo/identity/lib/odis/query";
+import { FederatedAttestationsWrapper } from "@celo/contractkit/lib/wrappers/FederatedAttestations";
 
 function App() {
   const { kit, connect, address, destroy } = useCelo();
 
   const ISSUER_PRIVATE_KEY = process.env.NEXT_PUBLIC_ISSUER_PRIVATE_KEY;
-  let issuerKit: ContractKit, issuer: Account;
+  let issuerKit: ContractKit, issuer: Account, federatedAttestationsContract: FederatedAttestationsWrapper;
 
   const [numberToRegister, setNumberToRegister] = useState("Phone Number");
   const [numberToSend, setNumberToSend] = useState("Receipient's Phone Number");
@@ -35,6 +36,7 @@ function App() {
         issuerKit.web3.eth.accounts.privateKeyToAccount(ISSUER_PRIVATE_KEY);
       issuerKit.addAccount(ISSUER_PRIVATE_KEY);
       issuerKit.defaultAccount = issuer.address;
+      federatedAttestationsContract = await issuerKit.contracts.getFederatedAttestations();
     };
     intializeIssuer();
   });
@@ -48,8 +50,15 @@ function App() {
       //@ts-ignore typing issue
       contractKit: issuerKit,
     };
-    const serviceContext = OdisUtils.Query.getServiceContext("alfajores");
-
+    // const serviceContext = OdisUtils.Query.getServiceContext('alfajores')
+    const serviceContext = {
+      odisUrl: 'https://us-central1-celo-phone-number-privacy-stg.cloudfunctions.net/combiner',
+      odisPubKey:
+        'kPoRxWdEdZ/Nd3uQnp3FJFs54zuiS+ksqvOm9x8vY6KHPG8jrfqysvIRU0wtqYsBKA7SoAsICMBv8C/Fb2ZpDOqhSqvr/sZbZoHmQfvbqrzbtDIPvUIrHgRS0ydJCMsA',
+    }
+    const blindingClient = new WebBlsBlindingClient(serviceContext.odisPubKey)
+    await blindingClient.init()
+    console.log("fetching identifier for", number)
     const response =
       await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
         number,
@@ -59,9 +68,10 @@ function App() {
         undefined,
         undefined,
         undefined,
-        new WebBlsBlindingClient(serviceContext.odisPubKey)
+        blindingClient
       );
-
+  
+    console.log(`got obfsucated identifier for ${number}: ${response.phoneHash}`)
     return response.phoneHash;
   }
 
@@ -111,28 +121,26 @@ function App() {
     if (successfulVerification) {
       const verificationTime = Math.floor(new Date().getTime() / 1000);
 
-      const identifier = await getIdentifier(numberToRegister);
-      const federatedAttestationsContract =
-        await issuerKit.contracts.getFederatedAttestations();
+    const identifier = await getIdentifier(numberToRegister)
 
-      await federatedAttestationsContract
-        .registerAttestationAsIssuer(identifier, address, verificationTime)
-        .send();
+    // TODO: check for existing attesation first, only register if none existing
+    await federatedAttestationsContract
+      .registerAttestationAsIssuer(identifier, address, verificationTime)
+      .send();
     }
   }
 
   async function sendToNumber() {
-    const identifier = getIdentifier(numberToSend);
-    const federatedAttestationsContract = await kit.contracts.getContract(
-      CeloContract.FederatedAttestations
-    );
+    const identifier = await getIdentifier(numberToSend)
 
     const attestations = await federatedAttestationsContract.lookupAttestations(
       identifier,
       [issuer.address]
     );
 
-    // TODO: implement flow for choosing the account
+    // TODO: implement UI for inputing amount to send
+    const cUSD = await kit.contracts.getStableToken()
+    await cUSD.transfer(attestations.accounts[0], 1000).sendAndWaitForReceipt()
   }
 
   return (
@@ -206,7 +214,7 @@ function App() {
         </div>
       )}
     </main>
-  );
+  )
 }
 
 function WrappedApp() {
