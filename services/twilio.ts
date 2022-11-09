@@ -4,14 +4,16 @@ export async function sendSmsVerificationToken(phoneNumber: string) {
     channel: "sms",
   });
 
-  const twilioURL = "https://verify-1556-q0v46o.twil.io";
-  const response = await fetch(`${twilioURL}/start-verify`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: data,
-  });
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_TWILIO_URL}/start-verify`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: data,
+    }
+  );
 }
 
 export async function verifyToken(
@@ -23,14 +25,16 @@ export async function verifyToken(
       to: phoneNumber,
       code: receivedCode,
     });
-    const twilioURL = "https://verify-1556-q0v46o.twil.io";
-    const response = await fetch(`${twilioURL}/check-verify`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: data,
-    });
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_TWILIO_URL}/check-verify`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: data,
+      }
+    );
 
     const json = await response.json();
     console.log("verification response", json.success);
