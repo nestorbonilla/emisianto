@@ -65,13 +65,50 @@ function App() {
     return response.phoneHash;
   }
 
+  async function registerIssuerAccountAndWallet() {
+    if (issuer.address == undefined) {
+      throw "issuer not found";
+    }
+    const accountsContract = await issuerKit.contracts.getAccounts();
+
+    // register account if needed
+    let registeredAccount = await accountsContract.isAccount(issuer.address);
+    if (!registeredAccount) {
+      console.log("Registering account");
+      const receipt = await accountsContract
+        .createAccount()
+        .sendAndWaitForReceipt({ from: issuer.address });
+      console.log("Receipt status: ", receipt.status);
+    } else {
+      console.log("Account already registered");
+    }
+
+    // register wallet if needed
+    let registeredWalletAddress = await accountsContract.getWalletAddress(
+      issuer.address
+    );
+    console.log("Wallet address: ", registeredWalletAddress);
+    if (
+      registeredWalletAddress == "0x0000000000000000000000000000000000000000"
+    ) {
+      console.log(
+        `Setting account's wallet address in Accounts.sol to ${issuer.address}`
+      );
+      const setWalletTx = await accountsContract
+        .setWalletAddress(issuer.address)
+        .sendAndWaitForReceipt();
+      console.log("Receipt status: ", setWalletTx.status);
+    } else {
+      console.log("Account's wallet already registered");
+    }
+  }
+
   async function registerNumber() {
     const successfulVerification = await verifyToken(
       numberToRegister,
       userCode
     );
     if (successfulVerification) {
-      // TODO: verify phone number with Twilio here
       const verificationTime = Math.floor(new Date().getTime() / 1000);
 
       const identifier = await getIdentifier(numberToRegister);
@@ -105,6 +142,11 @@ function App() {
         <i>Issuer Address: </i>
         {ISSUER_PRIVATE_KEY}
       </p>
+      <div>
+        <button onClick={() => registerIssuerAccountAndWallet()}>
+          Register issuer
+        </button>
+      </div>
       {!address ? (
         <button
           onClick={() =>
