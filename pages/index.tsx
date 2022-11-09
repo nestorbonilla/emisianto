@@ -164,7 +164,11 @@ function App() {
           <button onClick={destroy}>Disconnect your wallet</button>
           <div className="sections">
             <div>
-              <p>Verify your phone number</p>
+              <p>
+                Verify and register
+                <br />
+                your phone number.
+              </p>
               <input
                 value={numberToRegister}
                 onChange={(e) => setNumberToRegister(e.target.value)}
