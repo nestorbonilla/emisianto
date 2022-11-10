@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@celo/contractkit": "^2.3.0",
-    "@celo/identity": "2.4.0-beta.4",
+    "@celo/identity": "2.4.0-beta.5",
+    "@celo/poprf": "^0.1.9",
     "@celo/react-celo": "^4.2.1",
     "@walletconnect/web3-provider": "^1.7.7",
     "@web3-react/core": "^6.1.9",
