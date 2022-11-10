@@ -14,6 +14,7 @@ export async function sendSmsVerificationToken(phoneNumber: string) {
       body: data,
     }
   );
+  console.log("Verification request response:", response);
 }
 
 export async function verifyToken(
