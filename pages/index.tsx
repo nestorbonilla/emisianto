@@ -198,17 +198,24 @@ function App() {
     }
   }
 
+  // TODO: implement UI for inputing amount to send
   async function sendToNumber() {
-    const identifier = await getIdentifier(numberToSend);
+    try {
+      const identifier = await getIdentifier(numberToSend);
 
-    const attestations = await federatedAttestationsContract.lookupAttestations(
-      identifier,
-      [issuer.address]
-    );
+      const attestations =
+        await federatedAttestationsContract.lookupAttestations(identifier, [
+          issuer.address,
+        ]);
 
-    // TODO: implement UI for inputing amount to send
-    const cUSD = await kit.contracts.getStableToken();
-    await cUSD.transfer(attestations.accounts[0], 1000).sendAndWaitForReceipt();
+      //TODO: set the gas price for metamask
+      const cUSD = await kit.contracts.getStableToken();
+      await cUSD
+        .transfer(attestations.accounts[0], 1000)
+        .sendAndWaitForReceipt();
+    } catch (error) {
+      throw `Failed to send funds to number: ${error}`;
+    }
   }
 
   return (
