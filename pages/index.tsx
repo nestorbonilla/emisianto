@@ -214,10 +214,7 @@ function App() {
   return (
     <main>
       <h1>Issuer to verify, register, and lookup numbers</h1>
-      <p className="subtext">
-        <i>Issuer Address: </i>
-        {ISSUER_PRIVATE_KEY}
-      </p>
+      <br />
       <div>
         <button onClick={() => registerIssuerAccountAndWallet()}>
           Register issuer
