@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-For phone number verification to work with twillio, follow [this](https://www.twilio.com/blog/phone-verification-react-native) tutorial.
+For phone number verification to work with twillio, follow part of [this](https://www.twilio.com/blog/phone-verification-react-native) tutorial to setup the twilio verify backend.
 
 Add the issuer private key `NEXT_PUBLIC_ISSUER_PRIVATE_KEY` and the twilio URL `NEXT_PUBLIC_TWILIO_URL` to the .env file
 
