@@ -51,7 +51,6 @@ function App() {
   async function getIdentifier(number: string) {
     try {
       // TODO: check number is a valid E164 number
-      //TODO: add ODIS payment quota check
 
       const ONE_CENT_CUSD = issuerKit.web3.utils.toWei("0.01", "ether");
 
@@ -61,14 +60,8 @@ function App() {
         //@ts-ignore typing issue
         contractKit: issuerKit,
       };
-      // const serviceContext = OdisUtils.Query.getServiceContext('alfajores')
 
-      const serviceContext = {
-        odisUrl:
-          "https://us-central1-celo-phone-number-privacy-stg.cloudfunctions.net/combiner",
-        odisPubKey:
-          "kPoRxWdEdZ/Nd3uQnp3FJFs54zuiS+ksqvOm9x8vY6KHPG8jrfqysvIRU0wtqYsBKA7SoAsICMBv8C/Fb2ZpDOqhSqvr/sZbZoHmQfvbqrzbtDIPvUIrHgRS0ydJCMsA",
-      };
+      const serviceContext = OdisUtils.Query.ODIS_ALFAJORESSTAGING_CONTEXT;
 
       //check remaining quota
       const { remainingQuota } = await OdisUtils.Quota.getPnpQuotaStatus(
@@ -80,7 +73,7 @@ function App() {
       //increase quota if needed.
       console.log("remaining quota", remainingQuota);
       if (remainingQuota < 1) {
-        // give odis payment contract permission to use cusd
+        // give odis payment contract permission to use cUSD
         const cusd = await issuerKit.contracts.getStableToken();
         const currrentAllowance = await cusd.allowance(
           issuer.address,
@@ -131,7 +124,7 @@ function App() {
       );
       return response.phoneHash;
     } catch (error) {
-      throw `failed to get identifier ${error}`;
+      throw `failed to get identifier: ${error}`;
     }
   }
 
@@ -174,19 +167,34 @@ function App() {
   }
 
   async function registerNumber() {
-    const successfulVerification = await verifyToken(
-      numberToRegister,
-      userCode
-    );
-    if (successfulVerification) {
-      const verificationTime = Math.floor(new Date().getTime() / 1000);
+    try {
+      const successfulVerification = await verifyToken(
+        numberToRegister,
+        userCode
+      );
+      if (successfulVerification) {
+        const verificationTime = Math.floor(new Date().getTime() / 1000);
 
-      const identifier = await getIdentifier(numberToRegister);
+        const identifier = await getIdentifier(numberToRegister);
+        console.log(identifier);
 
-      // TODO: check for existing attesation first, only register if none existing
-      await federatedAttestationsContract
-        .registerAttestationAsIssuer(identifier, address, verificationTime)
-        .send();
+        const { accounts } =
+          await federatedAttestationsContract.lookupAttestations(identifier, [
+            issuer.address,
+          ]);
+        console.log(accounts);
+
+        if (accounts.length == 0) {
+          const attestationReceipt = await federatedAttestationsContract
+            .registerAttestationAsIssuer(identifier, address, verificationTime)
+            .sendAndWaitForReceipt();
+          console.log("attestation Receipt:", attestationReceipt.status);
+        } else {
+          console.log("phone number already registered with this issuer");
+        }
+      }
+    } catch (error) {
+      throw `Error registering phone number: ${error}`;
     }
   }
 
