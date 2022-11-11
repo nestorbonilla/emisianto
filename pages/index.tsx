@@ -33,6 +33,7 @@ function App() {
   const [numberToRegister, setNumberToRegister] = useState("Phone Number");
   const [numberToSend, setNumberToSend] = useState("Receipient's Phone Number");
   const [userCode, setUserCode] = useState("Verification Code");
+  const [sendAmount, setSendAmount] = useState("Amount to send");
 
   useEffect(() => {
     const intializeIssuer = async () => {
@@ -119,8 +120,9 @@ function App() {
           blindingClient
         );
 
+      console.log(`Obfuscated phone number: ${response.phoneHash}`);
       console.log(
-        `got obfsucated identifier for ${number}: ${response.phoneHash}`
+        `Obfuscated phone number is a result of: sha3('tel://${response.e164Number}__${response.pepper}') => ${response.phoneHash}`
       );
       return response.phoneHash;
     } catch (error) {
@@ -178,17 +180,23 @@ function App() {
         const identifier = await getIdentifier(numberToRegister);
         console.log(identifier);
 
+        // TODO: lookup list of issuers per phone number.
+
         const { accounts } =
           await federatedAttestationsContract.lookupAttestations(identifier, [
             issuer.address,
           ]);
         console.log(accounts);
+        //TODO:
+        // from hash to address
+        // sha3('tel://${response.e164Number}__${response.pepper}')
 
         if (accounts.length == 0) {
           const attestationReceipt = await federatedAttestationsContract
             .registerAttestationAsIssuer(identifier, address, verificationTime)
             .sendAndWaitForReceipt();
           console.log("attestation Receipt:", attestationReceipt.status);
+          //TODO: add link to txhash
         } else {
           console.log("phone number already registered with this issuer");
         }
@@ -199,8 +207,9 @@ function App() {
   }
 
   // TODO: implement UI for inputing amount to send
-  async function sendToNumber() {
+  async function sendToNumber(amount: string) {
     try {
+      const amountInWei = issuerKit.web3.utils.toWei(amount, "ether");
       const identifier = await getIdentifier(numberToSend);
 
       const attestations =
@@ -208,11 +217,11 @@ function App() {
           issuer.address,
         ]);
 
-      //TODO: set the gas price for metamask
-      const cUSD = await kit.contracts.getStableToken();
-      await cUSD
-        .transfer(attestations.accounts[0], 1000)
-        .sendAndWaitForReceipt();
+      const CELO = await kit.contracts.getGoldToken();
+      await CELO.transfer(
+        attestations.accounts[0],
+        amountInWei
+      ).sendAndWaitForReceipt({ gasPrice: 20000000000 });
     } catch (error) {
       throw `Failed to send funds to number: ${error}`;
     }
@@ -280,7 +289,12 @@ function App() {
                 onChange={(e) => setNumberToSend(e.target.value)}
                 type="text"
               />
-              <button onClick={() => sendToNumber()}>Send</button>
+              <input
+                value={sendAmount}
+                onChange={(e) => setSendAmount(e.target.value)}
+                type="text"
+              />
+              <button onClick={() => sendToNumber(sendAmount)}>Send</button>
             </div>
           </div>
         </div>
