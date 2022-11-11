@@ -108,7 +108,7 @@ function App() {
         serviceContext.odisPubKey
       );
       await blindingClient.init();
-      console.log("fetching identifier for", number);
+      console.log("fetching identifier for:", number);
       const response =
         await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
           number,
@@ -181,6 +181,7 @@ function App() {
         console.log(identifier);
 
         // TODO: lookup list of issuers per phone number.
+        //This could be a good example to have for potential issuers to learn about this feature
 
         const { accounts } =
           await federatedAttestationsContract.lookupAttestations(identifier, [
@@ -188,7 +189,7 @@ function App() {
           ]);
         console.log(accounts);
         //TODO:
-        // from hash to address
+        // from hash & issuer to address
         // sha3('tel://${response.e164Number}__${response.pepper}')
 
         if (accounts.length == 0) {
@@ -197,6 +198,7 @@ function App() {
             .sendAndWaitForReceipt();
           console.log("attestation Receipt:", attestationReceipt.status);
           //TODO: add link to txhash
+          // this would be used to lookup the transactions submitted by to federatedAttestation contract.
         } else {
           console.log("phone number already registered with this issuer");
         }
@@ -206,7 +208,6 @@ function App() {
     }
   }
 
-  // TODO: implement UI for inputing amount to send
   async function sendToNumber(amount: string) {
     try {
       const amountInWei = issuerKit.web3.utils.toWei(amount, "ether");
