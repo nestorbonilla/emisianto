@@ -30,6 +30,7 @@ function App() {
     federatedAttestationsContract: FederatedAttestationsWrapper,
     odisPaymentContract: OdisPaymentsWrapper;
 
+  const [numberToDeregister, setNumberToDeregister] = useState("");
   const [numberToRegister, setNumberToRegister] = useState("");
   const [numberToSend, setNumberToSend] = useState("");
   const [userCode, setUserCode] = useState("");
@@ -45,9 +46,23 @@ function App() {
       federatedAttestationsContract =
         await issuerKit.contracts.getFederatedAttestations();
       odisPaymentContract = await issuerKit.contracts.getOdisPayments();
-    }
+    };
     intializeIssuer();
-  })
+  });
+
+  async function deregisterPhoneNumber(phoneNumber: string) {
+    try {
+      const identifier = await getIdentifier(phoneNumber);
+      const receipt = await federatedAttestationsContract
+        .revokeAttestation(identifier, issuer.address, address)
+        .sendAndWaitForReceipt();
+      console.log(
+        `revoke attestation transaction receipt status: ${receipt.status}`
+      );
+    } catch (error) {
+      throw `Failed to deregister phone number: ${error}`;
+    }
+  }
 
   async function getIdentifier(phoneNumber: string) {
     try {
@@ -197,7 +212,7 @@ function App() {
           const attestationReceipt = await federatedAttestationsContract
             .registerAttestationAsIssuer(identifier, address, verificationTime)
             .sendAndWaitForReceipt();
-          console.log("attestation Receipt:", attestationReceipt.status);
+          console.log("attestation Receipt status:", attestationReceipt.status);
           console.log(
             `Register Attestation as issuer TX hash: https://explorer.celo.org/alfajores/tx/${attestationReceipt.transactionHash}/internal-transactions`
           );
@@ -255,106 +270,180 @@ function App() {
             {address}
           </p>
           <button onClick={destroy}>Disconnect your wallet</button>
-          <div className="sections">
+          {/* <br />
+          <br />
+          <div>
+            <input
+              value={numberToDeregister}
+              onChange={(e) => setNumberToDeregister(e.target.value)}
+              type="text"
+            />
 
+            <button onClick={() => deregisterPhoneNumber(numberToDeregister)}>
+              Deregister phone number
+            </button>
+          </div> */}
+          <div className="sections">
             <h2 className="py-5">Verify and register your phone number.</h2>
             <div className="mt-10 sm:mt-0">
               <div className="md:grid md:grid-cols-2 md:gap-6">
                 <div className="mt-5 md:col-span-2 md:mt-0">
-                    <div className="overflow-hidden shadow sm:rounded-md">
-                      <div className="bg-white px-4 py-5 sm:p-6">
-                        <div className="grid grid-cols-6 gap-6">
-                          <div className="col-span-6">
-                            <label htmlFor="numberToRegister" className="block text-sm font-medium text-gray-700">
-                              Phone number
-                            </label>
-                            <input
-                              type="text"
-                              name="numberToRegister"
-                              id="numberToRegister"
-                              value={numberToRegister}
-                              onChange={(e) => setNumberToRegister(e.target.value)}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
-                            />
-                          </div>
-                          <div className="col-span-6">
-                            <label htmlFor="userCode" className="block text-sm font-medium text-gray-700">
-                              Verification code
-                            </label>
-                            <input
-                              type="text"
-                              name="userCode"
-                              id="userCode"
-                              value={userCode}
-                              onChange={(e) => setUserCode(e.target.value)}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
-                            />
-                          </div>
+                  <div className="overflow-hidden shadow sm:rounded-md">
+                    <div className="bg-white px-4 py-5 sm:p-6">
+                      <div className="grid grid-cols-6 gap-6">
+                        <div className="col-span-6">
+                          <label
+                            htmlFor="numberToRegister"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Phone number
+                          </label>
+                          <input
+                            type="text"
+                            name="numberToRegister"
+                            id="numberToRegister"
+                            value={numberToRegister}
+                            onChange={(e) =>
+                              setNumberToRegister(e.target.value)
+                            }
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
+                          />
+                        </div>
+                        <div className="col-span-6">
+                          <label
+                            htmlFor="userCode"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Verification code
+                          </label>
+                          <input
+                            type="text"
+                            name="userCode"
+                            id="userCode"
+                            value={userCode}
+                            onChange={(e) => setUserCode(e.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
+                          />
                         </div>
                       </div>
-                      <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
-                        <button
-                          className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-celo-yellow focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-                          onClick={() => sendSmsVerificationToken(numberToRegister)}
-                        >
-                          1. Verify
-                        </button>
-                        <button
-                          className="inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-celo-yellow focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-                          onClick={async () => { await registerNumber() }}
-                        >
-                          2. Register
-                        </button>
-                      </div>
                     </div>
+                    <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
+                      <button
+                        className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-celo-yellow focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+                        onClick={() =>
+                          sendSmsVerificationToken(numberToRegister)
+                        }
+                      >
+                        1. Verify
+                      </button>
+                      <button
+                        className="inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-celo-yellow focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+                        onClick={async () => {
+                          await registerNumber();
+                        }}
+                      >
+                        2. Register
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div> 
+            </div>
 
             <h2 className="py-5">Send payment to phone number</h2>
             <div className="mt-10 sm:mt-0">
               <div className="md:grid md:grid-cols-2 md:gap-6">
                 <div className="mt-5 md:col-span-2 md:mt-0">
-                    <div className="overflow-hidden shadow sm:rounded-md">
-                      <div className="bg-white px-4 py-5 sm:p-6">
-                        <div className="grid grid-cols-6 gap-6">
-                          <div className="col-span-6">
-                            <label htmlFor="numberToRegister" className="block text-sm font-medium text-gray-700">
-                              Recipient phone number
-                            </label>
-                            <input
-                              type="text"
-                              name="numberToRegister"
-                              id="numberToRegister"
-                              value={numberToSend}
-                              onChange={(e) => setNumberToSend(e.target.value)}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
-                            />
-                          </div>
-                          <div className="col-span-6">
-                            <label htmlFor="userCode" className="block text-sm font-medium text-gray-700">
-                              Amount to send
-                            </label>
-                            <input
-                              type="text"
-                              name="userCode"
-                              id="userCode"
-                              value={sendAmount}
-                              onChange={(e) => setSendAmount(e.target.value)}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
-                            />
-                          </div>
+                  <div className="overflow-hidden shadow sm:rounded-md">
+                    <div className="bg-white px-4 py-5 sm:p-6">
+                      <div className="grid grid-cols-6 gap-6">
+                        <div className="col-span-6">
+                          <label
+                            htmlFor="numberToRegister"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Recipient phone number
+                          </label>
+                          <input
+                            type="text"
+                            name="numberToRegister"
+                            id="numberToRegister"
+                            value={numberToSend}
+                            onChange={(e) => setNumberToSend(e.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
+                          />
+                        </div>
+                        <div className="col-span-6">
+                          <label
+                            htmlFor="userCode"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Amount to send
+                          </label>
+                          <input
+                            type="text"
+                            name="userCode"
+                            id="userCode"
+                            value={sendAmount}
+                            onChange={(e) => setSendAmount(e.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
+                          />
                         </div>
                       </div>
-                      <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
-                        <button
-                          className="inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-celo-yellow focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-                          onClick={async () => { sendToNumber(sendAmount) }}
-                        >
-                          Send
-                        </button>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
+                      <button
+                        className="inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-celo-yellow focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+                        onClick={async () => {
+                          sendToNumber(sendAmount);
+                        }}
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2 className="py-5">Deregister phone number</h2>
+            <div className="mt-10 sm:mt-0">
+              <div className="md:grid md:grid-cols-2 md:gap-6">
+                <div className="mt-5 md:col-span-2 md:mt-0">
+                  <div className="overflow-hidden shadow sm:rounded-md">
+                    <div className="bg-white px-4 py-5 sm:p-6">
+                      <div className="grid grid-cols-6 gap-6">
+                        <div className="col-span-6">
+                          <label
+                            htmlFor="numberToRegister"
+                            className="block text-sm font-medium text-gray-700"
+                          >
+                            Phone number
+                          </label>
+                          <input
+                            type="text"
+                            name="numberToDeregister"
+                            id="numberToDeregister"
+                            value={numberToDeregister}
+                            onChange={(e) =>
+                              setNumberToDeregister(e.target.value)
+                            }
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
+                          />
+                        </div>
                       </div>
                     </div>
+                    <div className="bg-gray-50 px-4 py-3 text-right sm:px-6">
+                      <button
+                        className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-celo-yellow focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+                        onClick={() =>
+                          deregisterPhoneNumber(numberToDeregister)
+                        }
+                      >
+                        Deregister
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -362,7 +451,7 @@ function App() {
         </div>
       )}
     </main>
-  )
+  );
 }
 
-export default App
+export default App;
