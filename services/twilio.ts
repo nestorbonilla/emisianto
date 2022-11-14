@@ -1,7 +1,14 @@
-export async function sendSmsVerificationToken(phoneNumber: string) {
+export function validatePhoneNumber(phoneNumber:string):boolean {
   const E164_REGEX = /^\+[1-9][0-9]{1,14}$/;
+  if (E164_REGEX.test(phoneNumber)) {
+    return true
+  }
+  return false
+}
+
+export async function sendSmsVerificationToken(phoneNumber: string) {
   try {
-    if (!E164_REGEX.test(phoneNumber)) {
+    if (!validatePhoneNumber(phoneNumber)) {
       throw "Attempting to hash a non-e164 number: " + phoneNumber;
     }
 

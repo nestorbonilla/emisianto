@@ -10,7 +10,8 @@ module.exports = {
       colors: {
         "celo-green": "#35D07F",
         "celo-yellow": "#FBCC5C",
-        "celo-black": "#111214"
+        "celo-black": "#111214",
+        "red": "#FB7C6D"
       }
     },
   },
