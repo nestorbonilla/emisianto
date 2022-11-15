@@ -58,7 +58,7 @@ function App() {
         contractKit: issuerKit,
       };
 
-      const serviceContext = OdisUtils.Query.ODIS_ALFAJORESSTAGING_CONTEXT;
+      const serviceContext = OdisUtils.Query.ODIS_ALFAJORES_CONTEXT;
 
       //check remaining quota
       const { remainingQuota } = await OdisUtils.Quota.getPnpQuotaStatus(
