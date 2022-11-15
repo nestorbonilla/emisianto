@@ -1,31 +1,19 @@
-import {
-  CeloContract,
-  ContractKit,
-  newKit,
-  StableToken,
-} from "@celo/contractkit";
-import { ensureLeading0x } from "@celo/utils/lib/address";
+import { ContractKit, newKit } from "@celo/contractkit";
 import { BigNumber } from "bignumber.js";
-import Head from "next/head";
-import { useCallback, useEffect, useState } from "react";
-import Web3 from "web3";
-import { PrimaryButton, SecondaryButton, toast } from "../components";
+import { useEffect, useState } from "react";
+import { toast } from "../components";
 import { OdisUtils } from "@celo/identity";
-import WebBlsBlindingClient from "./bls-blinding-client";
-import { Alfajores, CeloProvider, useCelo } from "@celo/react-celo";
+import WebBlsBlindingClient from "../components/bls-blinding-client";
+import { useCelo } from "@celo/react-celo";
 import "@celo/react-celo/lib/styles.css";
-import {
-  E164_REGEX,
-  sendSmsVerificationToken,
-  verifyToken,
-} from "../services/twilio";
+import { E164_REGEX } from "../services/twilio";
 import { Account } from "web3-core";
 import { AuthSigner } from "@celo/identity/lib/odis/query";
 import { FederatedAttestationsWrapper } from "@celo/contractkit/lib/wrappers/FederatedAttestations";
 import { OdisPaymentsWrapper } from "@celo/contractkit/lib/wrappers/OdisPayments";
-import { RegisterNumberModal } from "./registerNumber";
-import { SendToNumberModal } from "./sendToNumber";
-import { DeregisterNumberModal } from "./deregisterNumber";
+import RegisterNumberModal from "./registerNumber";
+import SendToNumberModal from "./sendToNumber";
+import DeregisterNumberModal from "./deregisterNumber";
 
 function App() {
   const { kit, connect, address, destroy } = useCelo();

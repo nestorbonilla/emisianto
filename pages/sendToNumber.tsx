@@ -3,7 +3,7 @@ import { useState } from "react";
 import { validatePhoneNumber } from "../services/twilio";
 import BigNumber from "bignumber.js";
 
-export function SendToNumberModal({
+export default function SendToNumberModal({
   isOpen,
   onDismiss,
   sendToNumber,

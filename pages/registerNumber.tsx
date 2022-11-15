@@ -6,7 +6,7 @@ import {
   verifyToken,
 } from "../services/twilio";
 
-export function RegisterNumberModal({
+export default function RegisterNumberModal({
   isOpen,
   onDismiss,
   registerNumber,
@@ -129,7 +129,7 @@ export function RegisterNumberModal({
             />
             {invalidInput && (
               <small>
-                Incorrect code! Make sure you're entering the latest code
+                Incorrect code! Make sure you&apos;re entering the latest code
                 received to your phone
               </small>
             )}

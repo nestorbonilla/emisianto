@@ -1,9 +1,8 @@
 import Modal from "react-modal";
 import { useState } from "react";
 import { validatePhoneNumber } from "../services/twilio";
-import BigNumber from "bignumber.js";
 
-export function DeregisterNumberModal({
+export default function DeregisterNumberModal({
   isOpen,
   onDismiss,
   deregisterNumber,
