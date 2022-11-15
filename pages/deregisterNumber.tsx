@@ -1,24 +1,20 @@
 import Modal from "react-modal";
 import { useState } from "react";
-import {
-  sendSmsVerificationToken,
-  validatePhoneNumber,
-  verifyToken,
-} from "../services/twilio";
+import { validatePhoneNumber } from "../services/twilio";
+import BigNumber from "bignumber.js";
 
-export function RegisterNumberModal({
+export function DeregisterNumberModal({
   isOpen,
   onDismiss,
-  registerNumber,
+  deregisterNumber,
 }: {
   isOpen: boolean;
   onDismiss: () => void;
-  registerNumber: (number: string) => Promise<void>;
+  deregisterNumber: (number: string) => Promise<void>;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const [number, setNumber] = useState("");
-  const [userCode, setUserCode] = useState("");
 
   const [invalidInput, setInvalidInput] = useState(false);
   const [doneLoading, setDoneLoading] = useState(false);
@@ -28,36 +24,21 @@ export function RegisterNumberModal({
     setNumber(input);
   }
 
-  function editCode(input: string) {
-    setInvalidInput(false);
-    setUserCode(input);
-  }
-
-  async function sendVerificationText() {
+  async function deregister() {
     if (!validatePhoneNumber(number)) {
       setInvalidInput(true);
       return;
     }
-    await sendSmsVerificationToken(number);
+    // TODO: choose from linked addresses
     setInvalidInput(false);
     setActiveIndex(1);
-  }
-
-  async function validateCode() {
-    const successfulVerification = await verifyToken(number, userCode);
-    if (successfulVerification) {
-      setActiveIndex(2);
-      await registerNumber(number);
-      setDoneLoading(true);
-    } else {
-      setInvalidInput(true);
-    }
+    await deregisterNumber(number);
+    setDoneLoading(true);
   }
 
   function closeModal() {
     setActiveIndex(0);
     setNumber("");
-    setUserCode("");
     setDoneLoading(false);
     setInvalidInput(false);
     onDismiss();
@@ -76,27 +57,27 @@ export function RegisterNumberModal({
     <Modal isOpen={isOpen} style={customStyles}>
       {activeIndex === 0 ? (
         <div className="">
-          <h2 className="py-5">Verify your phone number</h2>
+          <h2 className="py-5">De-register a phone number</h2>
 
           <label
-            htmlFor="numberToRegister"
+            htmlFor="number"
             className="block text-sm font-medium text-gray-700"
           >
             Phone number
           </label>
           <input
             type="text"
-            name="numberToRegister"
-            id="numberToRegister"
+            name="number"
+            id="number"
             value={number}
             onChange={(e) => editNumber(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
           />
           <button
             className="mr-3 inline-flex object-bottom justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-            onClick={sendVerificationText}
+            onClick={deregister}
           >
-            Verify
+            De-register
           </button>
           {invalidInput && (
             <small>
@@ -105,38 +86,8 @@ export function RegisterNumberModal({
           )}
         </div>
       ) : activeIndex === 1 ? (
-        <div className="">
-          <h2 className="py-5">Enter the code we sent to your number</h2>
-          <label
-            htmlFor="userCode"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Verification Code
-          </label>
-          <input
-            type="text"
-            name="userCode"
-            id="userCode"
-            value={userCode}
-            onChange={(e) => editCode(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
-          />
-          <button
-            className="mr-3 inline-flex object-bottom justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-            onClick={validateCode}
-          >
-            Validate Code
-          </button>
-          {invalidInput && (
-            <small>
-              Incorrect code! Make sure you're entering the latest code received
-              to your phone
-            </small>
-          )}
-        </div>
-      ) : activeIndex === 2 ? (
         <div className="flex flex-col items-center">
-          <h2 className="py-5">Registering your phone number</h2>
+          <h2 className="py-5">De-registering {number}</h2>
           {!doneLoading ? (
             <svg
               aria-hidden="true"

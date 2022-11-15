@@ -1,5 +1,6 @@
+export const E164_REGEX = /^\+[1-9][0-9]{1,14}$/;
+
 export function validatePhoneNumber(phoneNumber:string):boolean {
-  const E164_REGEX = /^\+[1-9][0-9]{1,14}$/;
   if (E164_REGEX.test(phoneNumber)) {
     return true
   }

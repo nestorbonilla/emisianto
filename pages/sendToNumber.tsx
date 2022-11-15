@@ -1,24 +1,21 @@
 import Modal from "react-modal";
 import { useState } from "react";
-import {
-  sendSmsVerificationToken,
-  validatePhoneNumber,
-  verifyToken,
-} from "../services/twilio";
+import { validatePhoneNumber } from "../services/twilio";
+import BigNumber from "bignumber.js";
 
-export function RegisterNumberModal({
+export function SendToNumberModal({
   isOpen,
   onDismiss,
-  registerNumber,
+  sendToNumber,
 }: {
   isOpen: boolean;
   onDismiss: () => void;
-  registerNumber: (number: string) => Promise<void>;
+  sendToNumber: (number: string, amount: string) => Promise<void>;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const [number, setNumber] = useState("");
-  const [userCode, setUserCode] = useState("");
+  const [sendAmount, setSendAmount] = useState("");
 
   const [invalidInput, setInvalidInput] = useState(false);
   const [doneLoading, setDoneLoading] = useState(false);
@@ -28,36 +25,35 @@ export function RegisterNumberModal({
     setNumber(input);
   }
 
-  function editCode(input: string) {
+  function editAmount(input: string) {
     setInvalidInput(false);
-    setUserCode(input);
+    setSendAmount(input);
   }
 
-  async function sendVerificationText() {
+  async function checkPhoneNumber() {
     if (!validatePhoneNumber(number)) {
       setInvalidInput(true);
       return;
     }
-    await sendSmsVerificationToken(number);
+    // TODO: choose from linked addresses
     setInvalidInput(false);
     setActiveIndex(1);
   }
 
-  async function validateCode() {
-    const successfulVerification = await verifyToken(number, userCode);
-    if (successfulVerification) {
-      setActiveIndex(2);
-      await registerNumber(number);
-      setDoneLoading(true);
-    } else {
+  async function send() {
+    if (!new BigNumber(sendAmount).isGreaterThan(0)) {
       setInvalidInput(true);
+      return;
     }
+    setActiveIndex(2);
+    await sendToNumber(number, sendAmount);
+    setDoneLoading(true);
   }
 
   function closeModal() {
     setActiveIndex(0);
     setNumber("");
-    setUserCode("");
+    setSendAmount("");
     setDoneLoading(false);
     setInvalidInput(false);
     onDismiss();
@@ -76,27 +72,27 @@ export function RegisterNumberModal({
     <Modal isOpen={isOpen} style={customStyles}>
       {activeIndex === 0 ? (
         <div className="">
-          <h2 className="py-5">Verify your phone number</h2>
+          <h2 className="py-5">Recipient phone number</h2>
 
           <label
-            htmlFor="numberToRegister"
+            htmlFor="number"
             className="block text-sm font-medium text-gray-700"
           >
             Phone number
           </label>
           <input
             type="text"
-            name="numberToRegister"
-            id="numberToRegister"
+            name="number"
+            id="number"
             value={number}
             onChange={(e) => editNumber(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
           />
           <button
             className="mr-3 inline-flex object-bottom justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-            onClick={sendVerificationText}
+            onClick={checkPhoneNumber}
           >
-            Verify
+            Send
           </button>
           {invalidInput && (
             <small>
@@ -106,37 +102,36 @@ export function RegisterNumberModal({
         </div>
       ) : activeIndex === 1 ? (
         <div className="">
-          <h2 className="py-5">Enter the code we sent to your number</h2>
+          <h2 className="py-5">Amount to send</h2>
           <label
-            htmlFor="userCode"
+            htmlFor="amount"
             className="block text-sm font-medium text-gray-700"
           >
-            Verification Code
+            CELO
           </label>
           <input
             type="text"
-            name="userCode"
-            id="userCode"
-            value={userCode}
-            onChange={(e) => editCode(e.target.value)}
+            name="amount"
+            id="amount"
+            value={sendAmount}
+            onChange={(e) => editAmount(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
           />
           <button
             className="mr-3 inline-flex object-bottom justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-            onClick={validateCode}
+            onClick={send}
           >
-            Validate Code
+            Send
           </button>
           {invalidInput && (
-            <small>
-              Incorrect code! Make sure you're entering the latest code received
-              to your phone
-            </small>
+            <small>Invalid amount! Needs to be a positive amount</small>
           )}
         </div>
       ) : activeIndex === 2 ? (
         <div className="flex flex-col items-center">
-          <h2 className="py-5">Registering your phone number</h2>
+          <h2 className="py-5">
+            Sending {sendAmount} CELO to {number}
+          </h2>
           {!doneLoading ? (
             <svg
               aria-hidden="true"
