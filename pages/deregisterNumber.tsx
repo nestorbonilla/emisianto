@@ -33,6 +33,7 @@ export function DeregisterNumberModal({
     setInvalidInput(false);
     setActiveIndex(1);
     await deregisterNumber(number);
+    // TODO: handle failed deregister, ex. no attestation to revoke
     setDoneLoading(true);
   }
 
@@ -46,10 +47,11 @@ export function DeregisterNumberModal({
 
   const customStyles = {
     content: {
-      margin: "15%",
+      margin: "10%",
       borderRadius: "15px",
-      padding: "5%",
-      flex: 1,
+      padding: "0",
+      boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+      height: "fit-content",
     },
   };
 
@@ -57,33 +59,38 @@ export function DeregisterNumberModal({
     <Modal isOpen={isOpen} style={customStyles}>
       {activeIndex === 0 ? (
         <div className="">
-          <h2 className="py-5">De-register a phone number</h2>
+          <div className="p-20">
+            <h2 className="py-5">De-register a phone number</h2>
 
-          <label
-            htmlFor="number"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Phone number
-          </label>
-          <input
-            type="text"
-            name="number"
-            id="number"
-            value={number}
-            onChange={(e) => editNumber(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
-          />
-          <button
-            className="mr-3 inline-flex object-bottom justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-            onClick={deregister}
-          >
-            De-register
-          </button>
-          {invalidInput && (
-            <small>
-              Not a valid phone number! Make sure you include the country code
-            </small>
-          )}
+            <label
+              htmlFor="number"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Phone number
+            </label>
+            <input
+              type="text"
+              name="number"
+              id="number"
+              value={number}
+              onChange={(e) => editNumber(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-celo-green focus:ring-celo-green sm:text-sm"
+            />
+            {invalidInput && (
+              <small>
+                Not a valid phone number! Make sure you include the country code
+              </small>
+            )}
+          </div>
+
+          <div className="object-bottom bg-gray-50 px-4 py-3 text-right sm:px-6 ">
+            <button
+              className="mr-3 inline-flex object-bottom justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+              onClick={deregister}
+            >
+              De-register
+            </button>
+          </div>
         </div>
       ) : activeIndex === 1 ? (
         <div className="flex flex-col items-center">
@@ -91,7 +98,7 @@ export function DeregisterNumberModal({
           {!doneLoading ? (
             <svg
               aria-hidden="true"
-              className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 self-center"
+              className="mr-2 my-10 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 self-center"
               viewBox="0 0 100 101"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -106,13 +113,13 @@ export function DeregisterNumberModal({
               />
             </svg>
           ) : (
-            <p>Done!</p>
+            <p className="my-10">Done!</p>
           )}
         </div>
       ) : null}
 
       <button
-        className="mt-5 mr-3 inline-flex self-end justify-center rounded-md border border-transparent bg-red py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red focus:ring-offset-2"
+        className="mt-5 mr-3 absolute top-2 right-3 rounded-md border border-transparent bg-red py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-red focus:ring-offset-2"
         onClick={closeModal}
       >
         Close
