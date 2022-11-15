@@ -250,63 +250,65 @@ function App() {
 
   return (
     <main>
-      <h1>Issuer to verify, register, and lookup numbers</h1>
       <br />
       {!address ? (
         <button
           onClick={() =>
             connect().catch((e) => toast.error((e as Error).message))
           }
+          className="text-celo-green font-medium py-2 mb-2"
         >
           Connect your wallet
         </button>
       ) : (
-        <div>
-          <p className="subtext">
-            <i>Connected Address: </i>
-            {address}
-          </p>
-          <button onClick={destroy}>Disconnect your wallet</button>
-          <div className="sections">
-            <div className="mt-10 sm:mt-0">
-              <div className="overflow-hidden shadow sm:rounded-md">
-                <div className="bg-gray-50 px-4 py-3 text-center sm:px-6">
-                  <button
-                    className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-                    onClick={() => setIsRegisterNumberModalOpen(true)}
-                  >
-                    Verify and register your phone number
-                  </button>
-                </div>
-              </div>
-            </div>
+        <div className="flex flex-col mx-auto content-center">
+          <p className="">Connected Address: {address}</p>
+          <button
+            onClick={destroy}
+            className="text-celo-green font-medium py-2 mb-2 self-center"
+          >
+            Disconnect your wallet
+          </button>
 
-            <div className="mt-10 sm:mt-0">
-              <div className="overflow-hidden shadow sm:rounded-md">
-                <div className="bg-gray-50 px-4 py-3 text-center sm:px-6">
-                  <button
-                    className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-                    onClick={() => setIsSendToNumberModalOpen(true)}
-                  >
-                    Send payment to phone number
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-10 sm:mt-0">
-              <div className="overflow-hidden shadow sm:rounded-md">
-                <div className="bg-gray-50 px-4 py-3 text-center sm:px-6">
-                  <button
-                    className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
-                    onClick={() => setIsDeregisterNumberModalOpen(true)}
-                  >
-                    De-register phonenumber
-                  </button>
-                </div>
+          <div className="my-5 sm:mt-0">
+            <div className="overflow-hidden shadow sm:rounded-md">
+              <div className="bg-gray-50 px-4 py-5 text-center sm:px-6">
+                <button
+                  className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+                  onClick={() => setIsRegisterNumberModalOpen(true)}
+                >
+                  Verify and register your phone number
+                </button>
               </div>
             </div>
           </div>
+
+          <div className="my-5 sm:mt-0">
+            <div className="overflow-hidden shadow sm:rounded-md">
+              <div className="bg-gray-50 px-4 py-5 text-center sm:px-6">
+                <button
+                  className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+                  onClick={() => setIsSendToNumberModalOpen(true)}
+                >
+                  Send payment to a phone number
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="my-5 sm:mt-0">
+            <div className="overflow-hidden shadow sm:rounded-md">
+              <div className="bg-gray-50 px-4 py-5 text-center sm:px-6">
+                <button
+                  className="mr-3 inline-flex justify-center rounded-md border border-transparent bg-celo-green py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-celo-green focus:ring-offset-2"
+                  onClick={() => setIsDeregisterNumberModalOpen(true)}
+                >
+                  De-register your phone number
+                </button>
+              </div>
+            </div>
+          </div>
+
           <RegisterNumberModal
             isOpen={isRegisterNumberModalOpen}
             onDismiss={() => setIsRegisterNumberModalOpen(false)}

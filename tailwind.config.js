@@ -9,9 +9,11 @@ module.exports = {
     extend: {
       colors: {
         "celo-green": "#35D07F",
-        "celo-yellow": "#FBCC5C",
-        "celo-black": "#111214",
-        "red": "#FB7C6D"
+        "celo-gold": "#FBCC5C",
+        "celo-dark": "#111214",
+        "red": "#FB7C6D",
+        "faint-gold": "#FEF2D6",
+        "faint-gray": "#F8F9F9"
       }
     },
   },
