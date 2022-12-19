@@ -8,12 +8,17 @@ import { useCelo } from "@celo/react-celo";
 import "@celo/react-celo/lib/styles.css";
 import { E164_REGEX } from "../services/twilio";
 import { Account } from "web3-core";
-import { AuthSigner } from "@celo/identity/lib/odis/query";
+import {
+  AuthSigner,
+  getServiceContext,
+  OdisContextName,
+} from "@celo/identity/lib/odis/query";
 import { FederatedAttestationsWrapper } from "@celo/contractkit/lib/wrappers/FederatedAttestations";
 import { OdisPaymentsWrapper } from "@celo/contractkit/lib/wrappers/OdisPayments";
 import RegisterNumberModal from "./registerNumber";
 import SendToNumberModal from "./sendToNumber";
 import DeregisterNumberModal from "./deregisterNumber";
+import { IdentifierPrefix } from "@celo/identity/lib/odis/identifier";
 
 function App() {
   const { kit, connect, address, destroy } = useCelo();
@@ -58,7 +63,7 @@ function App() {
         contractKit: issuerKit,
       };
 
-      const serviceContext = OdisUtils.Query.ODIS_ALFAJORES_CONTEXT;
+      const serviceContext = getServiceContext(OdisContextName.ALFAJORES);
 
       //check remaining quota
       const { remainingQuota } = await OdisUtils.Quota.getPnpQuotaStatus(
@@ -106,24 +111,24 @@ function App() {
       );
       await blindingClient.init();
       console.log("fetching identifier for:", phoneNumber);
-      const response =
-        await OdisUtils.PhoneNumberIdentifier.getPhoneNumberIdentifier(
-          phoneNumber,
-          issuer.address,
-          authSigner,
-          serviceContext,
-          undefined,
-          undefined,
-          blindingClient
-        );
-
-      console.log(`Obfuscated phone number: ${response.phoneHash}`);
-
-      console.log(
-        `Obfuscated phone number is a result of: sha3('tel://${response.e164Number}__${response.pepper}') => ${response.phoneHash}`
+      const response = await OdisUtils.Identifier.getObfuscatedIdentifier(
+        phoneNumber,
+        IdentifierPrefix.PHONE_NUMBER,
+        issuer.address,
+        authSigner,
+        serviceContext,
+        undefined,
+        undefined,
+        blindingClient
       );
 
-      return response.phoneHash;
+      console.log(`Obfuscated phone number: ${response.obfuscatedIdentifier}`);
+
+      console.log(
+        `Obfuscated phone number is a result of: sha3('tel://${response.plaintextIdentifier}__${response.pepper}') => ${response.obfuscatedIdentifier}`
+      );
+
+      return response.obfuscatedIdentifier;
     } catch (error) {
       throw `failed to get identifier: ${error}`;
     }
