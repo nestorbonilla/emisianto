@@ -3,6 +3,7 @@ import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { newKit } from "@celo/contractkit";
+import { useCelo } from "@celo/react-celo";
 
 const spectral = Spectral({
   subsets: ['latin'],
@@ -11,7 +12,8 @@ const spectral = Spectral({
 });
 
 export default function Header() {
-  const issuerKit = newKit("https://alfajores-forno.celo-testnet.org");
+  const { network } = useCelo();
+  const issuerKit = newKit(network.rpcUrl);
   const issuerAddress = issuerKit.web3.eth.accounts.privateKeyToAccount(
     process.env.NEXT_PUBLIC_ISSUER_PRIVATE_KEY
   ).address;

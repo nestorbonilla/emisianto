@@ -23,9 +23,10 @@ import { IdentifierPrefix } from "@celo/identity/lib/odis/identifier";
 function App() {
 
   let [componentInitialized, setComponentInitialized] = useState(false);
-  const { initialised, kit, connect, address, destroy } = useCelo();
+  const { initialised, kit, connect, address, destroy, network } = useCelo();
 
   const ISSUER_PRIVATE_KEY = process.env.NEXT_PUBLIC_ISSUER_PRIVATE_KEY;
+  const DEK_PRIVATE_KEY = process.env.NEXT_PUBLIC_DEK_PRIVATE_KEY;
   let issuerKit: ContractKit,
     issuer: Account,
     federatedAttestationsContract: FederatedAttestationsWrapper,
@@ -45,7 +46,7 @@ function App() {
 
   useEffect(() => {
     const intializeIssuer = async () => {
-      issuerKit = newKit("https://alfajores-forno.celo-testnet.org");
+      issuerKit = newKit(network.rpcUrl);
       issuer =
         issuerKit.web3.eth.accounts.privateKeyToAccount(ISSUER_PRIVATE_KEY);
       issuerKit.addAccount(ISSUER_PRIVATE_KEY);
@@ -64,11 +65,10 @@ function App() {
       }
       const ONE_CENT_CUSD = issuerKit.web3.utils.toWei("0.01", "ether");
 
-      let authMethod: any = OdisUtils.Query.AuthenticationMethod.WALLET_KEY;
+      let authMethod: any = OdisUtils.Query.AuthenticationMethod.ENCRYPTION_KEY;
       const authSigner: AuthSigner = {
         authenticationMethod: authMethod,
-        //@ts-ignore typing issue
-        contractKit: issuerKit,
+        rawKey: DEK_PRIVATE_KEY,
       };
 
       const serviceContext = getServiceContext(OdisContextName.ALFAJORES);
@@ -142,8 +142,8 @@ function App() {
     }
   }
 
-  // this function needs to be called once when using a new issuer address
-  async function registerIssuerAccountAndWallet() {
+  // this function needs to be called once when using a new issuer address for the first time
+  async function registerIssuerAccountAndDEK() {
     if (issuer.address == undefined) {
       throw "issuer not found";
     }
@@ -161,24 +161,13 @@ function App() {
       console.log("Account already registered");
     }
 
-    // register wallet if needed
-    let registeredWalletAddress = await accountsContract.getWalletAddress(
-      issuer.address
-    );
-    console.log("Wallet address: ", registeredWalletAddress);
-    if (
-      registeredWalletAddress == "0x0000000000000000000000000000000000000000"
-    ) {
-      console.log(
-        `Setting account's wallet address in Accounts.sol to ${issuer.address}`
-      );
-      const setWalletTx = await accountsContract
-        .setWalletAddress(issuer.address)
-        .sendAndWaitForReceipt();
-      console.log("Receipt status: ", setWalletTx.status);
-    } else {
-      console.log("Account's wallet already registered");
-    }
+    // register DEK
+    const DEK_PUBLIC_KEY = process.env.NEXT_PUBLIC_DEK_PUBLIC_KEY;
+    console.log("registering dek");
+    await accountsContract
+      .setAccountDataEncryptionKey(DEK_PUBLIC_KEY)
+      .sendAndWaitForReceipt({ from: issuer.address });
+    console.log("dek registered");
   }
 
   async function registerNumber(number: string) {
@@ -203,7 +192,7 @@ function App() {
           .sendAndWaitForReceipt();
         console.log("attestation Receipt status:", attestationReceipt.status);
         console.log(
-          `Register Attestation as issuer TX hash: https://explorer.celo.org/alfajores/tx/${attestationReceipt.transactionHash}/internal-transactions`
+          `Register Attestation as issuer TX hash: ${network.explorer}/tx/${attestationReceipt.transactionHash}/internal-transactions`
         );
       } else {
         console.log("phone number already registered with this issuer");
