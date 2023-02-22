@@ -1,28 +1,23 @@
+import { useEffect, useState, useContext } from "react";
 import { BigNumber } from "bignumber.js";
-import { useEffect, useState, useContext, useCallback } from "react";
 import { OdisUtils } from "@celo/identity";
 import WebBlsBlindingClient from "../components/bls-blinding-client";
 import { useCelo } from "@celo/react-celo";
-import "@celo/react-celo/lib/styles.css";
 import { AddressUtils } from "@celo/utils";
 import {
   AuthSigner,
   getServiceContext,
   OdisContextName,
 } from "@celo/identity/lib/odis/query";
-import { FederatedAttestationsWrapper } from "@celo/contractkit/lib/wrappers/FederatedAttestations";
-import { OdisPaymentsWrapper } from "@celo/contractkit/lib/wrappers/OdisPayments";
 import { IdentifierPrefix } from "@celo/identity/lib/odis/identifier";
 import { useSession, signIn, signOut } from "next-auth/react";
-
-// import {AiFillLock, AiTwotoneLock} from "react-icons/ai";
-import { LockOpenIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-
 import PrimaryButton from "../components/PrimaryButton";
 import SessionCard from "../components/SessionCard";
-
 import { IssuerContext } from '../provider/IssuerProvider';
 import { getQuota, lookupAttestations } from "../utils/odisUtils";
+
+import "@celo/react-celo/lib/styles.css";
+import { LockOpenIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 
 function App() {
 
@@ -30,10 +25,8 @@ function App() {
   
   let [componentInitialized, setComponentInitialized] = useState(false);
   let { initialised, kit, connect, address, destroy, network } = useCelo();
-  let { issuer, issuerKit } = useContext(IssuerContext);
-  const ISSUER_PRIVATE_KEY = process.env.NEXT_PUBLIC_ISSUER_PRIVATE_KEY;
-  const DEK_PRIVATE_KEY = process.env.NEXT_PUBLIC_DEK_PRIVATE_KEY;
-  let federatedAttestationsContract: FederatedAttestationsWrapper, odisPaymentContract: OdisPaymentsWrapper;
+  let { issuer, issuerKit, odisPaymentContract, federatedAttestationsContract } = useContext(IssuerContext);
+
 
   let [amountToSend, setAmountToSend] = useState(0);
   const { data: session } = useSession();
@@ -138,6 +131,7 @@ function App() {
   useEffect(() => {
     if (initialised) {
       setComponentInitialized(true);
+      
     }
   }, [initialised]);
 
@@ -146,16 +140,23 @@ function App() {
     
       const ONE_CENT_CUSD = issuerKit.web3.utils.toWei("0.01", "ether");
 
-      let authMethod: any = OdisUtils.Query.AuthenticationMethod.ENCRYPTION_KEY;
+      // encryption key mechanism
+      // let authMethod: any = OdisUtils.Query.AuthenticationMethod.ENCRYPTION_KEY;
+      // const authSigner: AuthSigner = {
+      //   authenticationMethod: authMethod,
+      // };
+
+      // wallet key mechanism
+      let authMethod: any = OdisUtils.Query.AuthenticationMethod.WALLET_KEY;
       const authSigner: AuthSigner = {
         authenticationMethod: authMethod,
-        rawKey: DEK_PRIVATE_KEY,
+        contractKit: issuerKit
       };
 
       const serviceContext = getServiceContext(OdisContextName.ALFAJORES);
 
       //check remaining quota
-      const { remainingQuota } = await getQuota(
+      const remainingQuota = await getQuota(
         issuer.address,
         authSigner,
         serviceContext
@@ -165,6 +166,7 @@ function App() {
       console.log("remaining ODIS quota", remainingQuota);
       if (remainingQuota < 1) {
         // give odis payment contract permission to use cUSD
+
         const cusd = await issuerKit.contracts.getStableToken();
         const currrentAllowance = await cusd.allowance(
           issuer.address,
@@ -202,7 +204,8 @@ function App() {
       console.log("fetching identifier for:", handle);
       const response = await OdisUtils.Identifier.getObfuscatedIdentifier(
         handle,
-        IdentifierPrefix.PHONE_NUMBER,
+        // IdentifierPrefix.PHONE_NUMBER,
+        "github",
         issuer.address,
         authSigner,
         serviceContext,
@@ -214,7 +217,7 @@ function App() {
       console.log(`Obfuscated phone number: ${response.obfuscatedIdentifier}`);
 
       console.log(
-        `Obfuscated phone number is a result of: sha3('tel://${response.plaintextIdentifier}__${response.pepper}') => ${response.obfuscatedIdentifier}`
+        `Obfuscated phone number is a result of: sha3('github://${response.plaintextIdentifier}__${response.pepper}') => ${response.obfuscatedIdentifier}`
       );
 
       return response.obfuscatedIdentifier;
@@ -222,7 +225,6 @@ function App() {
       throw `failed to get identifier: ${error}`;
     }
   }
-
 
   // this function needs to be called once when using a new issuer address for the first time
   async function registerIssuerAccountAndDEK() {
@@ -257,7 +259,6 @@ function App() {
       const verificationTime = Math.floor(new Date().getTime() / 1000);
 
       const identifier = await getIdentifier(handle);
-      console.log("hey", identifier);
 
       // TODO: lookup list of issuers per phone number.
       // This could be a good example to have for potential issuers to learn about this feature.

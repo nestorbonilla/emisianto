@@ -2,7 +2,7 @@ import {OdisUtils} from '@celo/identity';
 import BigNumber from 'bignumber.js';
 
 export async function getQuota(address, authSigner, serviceContext) {
-  const {remainingQuota: number} = await OdisUtils.Quota.getPnpQuotaStatus(
+  const {remainingQuota} = await OdisUtils.Quota.getPnpQuotaStatus(
     address,
     authSigner,
     serviceContext,
