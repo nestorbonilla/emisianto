@@ -1,26 +1,31 @@
 import "../styles/globals.css";
 import "@celo/react-celo/lib/styles.css";
-import type { AppProps } from "next/app";
 import Layout from "../components/Layout";
 import { CeloProvider, Alfajores } from "@celo/react-celo";
+import { SessionProvider } from "next-auth/react";
+import IssuerProvider from "../provider/IssuerProvider";
 
-function MyApp({ Component, pageProps }: AppProps) {
-  const AnyComponent = Component as any;
+function SocialConnectDemo({ Component, pageProps, session}) {
+  const AppComponent = Component as any;
   return (
     <CeloProvider
       dapp={{
-        name: "Register Phone Number",
-        description: "This app allows you to register a number with Celo",
-        url: "https://example.com",
+        name: "Register Identifier",
+        description: "This app allows you to register an identifier with SocialConnect protocol.",
+        url: "https://socialconnect.org",
         icon: "",
       }}
       defaultNetwork={Alfajores.name}
     >
-      <Layout>
-        <AnyComponent {...pageProps} />
-      </Layout>
+      <IssuerProvider>
+        <SessionProvider session={session}>
+          <Layout>
+            <AppComponent {...pageProps} />
+          </Layout>
+        </SessionProvider>
+      </IssuerProvider>
     </CeloProvider>
   );
 }
 
-export default MyApp;
+export default SocialConnectDemo;

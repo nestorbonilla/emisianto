@@ -7,7 +7,10 @@ const nextConfig = {
       fs: false
     }
     return config
-  }
+  },
+  images: {
+    domains: ['avatars.githubusercontent.com'],
+  },
 }
 
 module.exports = nextConfig

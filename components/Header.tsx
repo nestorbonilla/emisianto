@@ -48,7 +48,7 @@ export default function Header() {
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                   <div className="inline-flex items-center px-1 pt-1 text-xl font-medium text-gray-900">
                     <div className={spectral.className}>
-                      Phone Number Issuer
+                      SocialConnect Demo
                     </div>
                   </div>
                 </div>
